@@ -229,3 +229,24 @@ export async function getUser(email: string) {
     throw new Error('Failed to fetch user.');
   }
 }
+
+export async function getInvoicesCount() {
+  const invoiceCountPromise = await sql`SELECT COUNT(*) FROM invoices`;
+  return Number(invoiceCountPromise.rows[0].count);
+}
+
+export async function getCustomersCount() {
+  const customerCountPromise = await sql`SELECT COUNT(*) FROM customers`;
+  return Number(customerCountPromise.rows[0].count);
+}
+
+export async function getTotalPaidAndPendingInvoices() {
+  const invoicesSumPromise = await sql`SELECT 
+        SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) AS "paid",
+        SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) AS "pending" 
+        FROM invoices`;
+
+  const totalPaid = formatCurrency(invoicesSumPromise.rows[0].paid ?? '0')
+  const totalPending = formatCurrency(invoicesSumPromise.rows[0].pending ?? '0')
+  return {totalPaid, totalPending};
+}
